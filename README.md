@@ -5,8 +5,7 @@
 
 Sonification of water usage of a tap during one day utilizing Pure Data Vanilla.
 
-**<TODO>:** Describe the purpose, functionality and intended application
-of the project here.
+This is a group project for *Sonic Interaction Design* held by Katharina Groß-Vogt at IEM/KUG.
 
 ## Requirements
 

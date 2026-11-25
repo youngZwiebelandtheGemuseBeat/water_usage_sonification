@@ -1,0 +1,45 @@
+# Operating system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Desktop.ini
+
+# Editor settings, backups, and logs
+.idea/
+.vscode/
+*~
+*.bak
+*.tmp
+*.swp
+*.log
+
+# Local configuration and Pd preferences
+.env
+.env.*
+!.env.example
+*.local
+.pdsettings
+org.puredata.pd.plist
+
+# Generated files and locally downloaded externals
+/output/
+/recordings/
+/build/
+/cache/
+/tmp/
+/externals/
+
+# Compiled Pd externals
+*.pd_darwin
+*.pd_linux
+*.pd_windows
+*.d_*
+*.l_*
+*.m_*
+*.dylib
+*.so
+*.dll

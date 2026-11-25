@@ -1,0 +1,19 @@
+* text=auto
+
+*.pd text eol=lf diff
+*.md text eol=lf
+*.html text eol=lf
+*.txt text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+*.sh text eol=lf
+
+*.wav binary
+*.aif binary
+*.aiff binary
+*.flac binary
+*.mp3 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary

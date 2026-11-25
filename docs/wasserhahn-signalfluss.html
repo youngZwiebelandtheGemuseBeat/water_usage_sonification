@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vom Wassergeräusch zum Hahnzustand</title>
+<style>
+  :root {
+    color-scheme: light;
+    --foreground: #202a31;
+    --muted-foreground: #52616c;
+    --blue: #246b96;
+    --font-size-base: 16px;
+    background: #fff;
+    font: 100%/1.45 system-ui, sans-serif;
+  }
+  body { max-width: 62rem; margin: 2rem auto; padding-inline: 1rem; }
+  .text-small { font-size: .875rem; }
+  .text-muted { color: var(--muted-foreground); }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  #wasserhahn-fluss {
+    --wasser: var(--viz-series-1, var(--blue));
+    --linie: color-mix(in srgb, var(--foreground) 24%, transparent);
+    --leise: color-mix(in srgb, var(--foreground) 6%, transparent);
+    --signal: color-mix(in srgb, var(--wasser) 15%, transparent);
+    --abstand: var(--font-size-base, 14px);
+    display: grid;
+    gap: calc(var(--abstand) * 1.1);
+    color: var(--foreground);
+  }
+  #wasserhahn-fluss h1 { margin: 0 0 calc(var(--abstand) * .3); }
+  #wasserhahn-fluss h2 { margin: 0; }
+  #wasserhahn-fluss .setup, #wasserhahn-fluss .parameter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: calc(var(--abstand) * .3) calc(var(--abstand) * .8);
+  }
+  #wasserhahn-fluss .pause { margin-inline-start: auto; }
+  #wasserhahn-fluss .main-flow {
+    display: grid;
+    grid-template-columns: .8fr minmax(20px, .2fr) 1.2fr minmax(20px, .2fr) 1.45fr;
+    align-items: center;
+    gap: calc(var(--abstand) * .45);
+  }
+  #wasserhahn-fluss .stage { min-width: 0; }
+  #wasserhahn-fluss .stage p { margin: calc(var(--abstand) * .25) 0 0; }
+  #wasserhahn-fluss .stage-name { font-weight: 500; }
+  #wasserhahn-fluss .source-art,
+  #wasserhahn-fluss .eq-art,
+  #wasserhahn-fluss .test-art {
+    display: flex;
+    align-items: center;
+    height: calc(var(--abstand) * 3.5);
+    margin-block-end: calc(var(--abstand) * .55);
+    color: var(--wasser);
+  }
+  #wasserhahn-fluss .source-art { gap: calc(var(--abstand) * .5); }
+  #wasserhahn-fluss .source-art svg.waveform { width: min(100%, 68px); height: 30px; }
+  #wasserhahn-fluss .eq-art svg { display: block; width: min(100%, 170px); height: 100%; }
+  #wasserhahn-fluss .test-art svg { display: block; width: min(100%, 145px); height: 100%; }
+  #wasserhahn-fluss .arrow {
+    position: relative;
+    min-width: 0;
+    height: 1px;
+    background: var(--linie);
+  }
+  #wasserhahn-fluss .arrow::after {
+    content: "";
+    position: absolute;
+    inset: 0 1px auto auto;
+    width: 6px;
+    height: 6px;
+    border-block-start: 1px solid var(--muted-foreground);
+    border-inline-end: 1px solid var(--muted-foreground);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  #wasserhahn-fluss .raw-route {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--abstand) * .65);
+    color: var(--muted-foreground);
+  }
+  #wasserhahn-fluss .raw-route::before, #wasserhahn-fluss .raw-route::after {
+    content: "";
+    flex: 1 1 0;
+    height: 0;
+    border-block-start: 1px dashed var(--linie);
+  }
+  #wasserhahn-fluss .timing {
+    display: grid;
+    gap: calc(var(--abstand) * .5);
+  }
+  #wasserhahn-fluss .headline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: calc(var(--abstand) * .4) calc(var(--abstand) * .7);
+  }
+  #wasserhahn-fluss .timing-row {
+    display: grid;
+    grid-template-columns: minmax(85px, 1fr) minmax(0, 5fr);
+    gap: calc(var(--abstand) * .6);
+    align-items: center;
+  }
+  #wasserhahn-fluss .track {
+    display: grid;
+    grid-template-columns: 300fr 350fr 350fr 200fr;
+    min-width: 0;
+    gap: 2px;
+  }
+  #wasserhahn-fluss .track span {
+    padding: calc(var(--abstand) * .45) calc(var(--abstand) * .35);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  #wasserhahn-fluss .qualifies { grid-column: 1 / 3; background: var(--signal); }
+  #wasserhahn-fluss .fails { grid-column: 3 / 5; background: var(--leise); }
+  #wasserhahn-fluss .wait {
+    position: relative;
+    border-block-end: 1px solid var(--linie);
+    margin-block-end: 4px;
+  }
+  #wasserhahn-fluss .wait::before, #wasserhahn-fluss .wait::after {
+    content: "";
+    border-inline-start: 1px solid var(--linie);
+    position: absolute;
+    bottom: -4px;
+    height: 7px;
+  }
+  #wasserhahn-fluss .wait::before { left: 0; }
+  #wasserhahn-fluss .wait::after { right: 0; }
+  #wasserhahn-fluss .wait-off { grid-column: 3; }
+  #wasserhahn-fluss .off { background: var(--leise); }
+  #wasserhahn-fluss .on { grid-column: 2 / 4; background: var(--signal); font-weight: 500; }
+  #wasserhahn-fluss .time-direction { grid-column: 2; text-align: end; }
+  #wasserhahn-fluss .rule { margin: 0; }
+  #wasserhahn-fluss hr { width: 100%; margin: 0; border: 0; border-block-start: 1px solid var(--linie); }
+  @media (max-width: 520px) {
+    #wasserhahn-fluss .pause { margin-inline-start: 0; }
+    #wasserhahn-fluss .main-flow { grid-template-columns: 1fr; }
+    #wasserhahn-fluss .stage {
+      display: grid;
+      grid-template-columns: minmax(55px, 24%) 1fr;
+      gap: calc(var(--abstand) * .7);
+      align-items: center;
+    }
+    #wasserhahn-fluss .source-art,
+    #wasserhahn-fluss .eq-art,
+    #wasserhahn-fluss .test-art { margin: 0; }
+    #wasserhahn-fluss .source-art { gap: 2px; }
+    #wasserhahn-fluss .source-art svg.waveform { width: 24px; }
+    #wasserhahn-fluss .arrow {
+      height: 14px;
+      width: 1px;
+      margin-inline-start: 12%;
+    }
+    #wasserhahn-fluss .arrow::after { inset: auto auto 1px 0; transform: translateX(-50%) rotate(135deg); }
+    #wasserhahn-fluss .timing-row { grid-template-columns: 1fr; gap: calc(var(--abstand) * .15); }
+    #wasserhahn-fluss .time-direction { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<section id="wasserhahn-fluss" aria-labelledby="wasserhahn-titel">
+  <header>
+    <h1 id="wasserhahn-titel">Vom Wassergeräusch zum Hahnzustand</h1>
+    <div class="setup">
+      <span>Mikrofon in den Audio-Einstellungen wählen → DSP einschalten</span>
+      <span class="pause text-small text-muted">Start bei AUS · DSP aus → PAUSE</span>
+    </div>
+  </header>
+
+  <hr>
+
+  <div class="main-flow" aria-label="Signalweg der Wasserhahnerkennung">
+    <div class="stage">
+      <div class="source-art" aria-hidden="true">
+        <svg class="waveform" viewBox="0 0 68 30" preserveAspectRatio="none">
+          <path d="M1 15h6l3-3 3 6 4-12 4 18 4-14 4 9 4-16 4 24 4-14 4 3 4-7 4 9 4-4 4 1h6"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stage-name">Mikrofon</div>
+        <p class="text-small text-muted">Eingang 1 liefert den Ton aus der Umgebung.</p>
+      </div>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="stage">
+      <div class="eq-art" aria-hidden="true">
+        <svg viewBox="0 0 170 50" preserveAspectRatio="none">
+          <path d="M1 3v45h168 M1 26h168" fill="none" stroke="var(--linie)" vector-effect="non-scaling-stroke"/>
+          <path d="M2 48C14 47 18 16 35 11S80 6 98 9s30 8 43 13 18 7 28 10V48Z" fill="var(--signal)"/>
+          <path d="M2 48C14 47 18 16 35 11S80 6 98 9s30 8 43 13 18 7 28 10"
+                fill="none" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stage-name">Frequenzen gewichten</div>
+        <p class="text-small text-muted">Der Erkennungs-EQ dämpft weniger relevante Frequenzen. Das Rohspektrum erscheint alle 100&nbsp;ms in der Anzeige.</p>
+      </div>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="stage">
+      <div class="test-art" aria-hidden="true">
+        <svg viewBox="0 0 145 50" preserveAspectRatio="none">
+          <path d="M1 48h142 M72 3v45" fill="none" stroke="var(--linie)" vector-effect="non-scaling-stroke"/>
+          <path d="M6 48V36h9v12m6 0V26h9v22m6 0V30h9v18m6 0V16h9v32m21 0V25h9v23m6 0V19h9v29m6 0V31h9v17m6 0V35h9v13" fill="currentColor" opacity=".72"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stage-name">Pegel und Klang prüfen</div>
+        <p class="text-small text-muted">Ist der Bandpegel hoch genug? Für Wasser sollen beide Teilbänder ähnlich laut sein und die Tonhöhe soll wenig ausgeprägt sein.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="raw-route text-small" aria-label="Zusätzlicher Signalweg vom Mikrofon zur Klangprüfung">
+    <span>Mikrofon → Tonhöhenprüfung direkt am Rohsignal</span>
+  </div>
+
+  <hr>
+
+  <section class="timing" aria-labelledby="wasserhahn-zeit">
+    <div class="headline">
+      <h2 id="wasserhahn-zeit">Wann wechselt die Anzeige?</h2>
+      <span class="text-small text-muted">Beispiel mit Startwerten</span>
+    </div>
+    <div class="timing-row">
+      <span>Messung</span>
+      <div class="track">
+        <span class="qualifies">Pegel ≥ −45 dBFS und Klang passt</span>
+        <span class="fails">Pegel ≤ −50 dBFS oder Klang passt nicht mehr</span>
+      </div>
+    </div>
+    <div class="timing-row">
+      <span>Wartezeit</span>
+      <div class="track tabular-nums">
+        <span class="wait">300&nbsp;ms</span>
+        <span class="wait wait-off">350&nbsp;ms</span>
+      </div>
+    </div>
+    <div class="timing-row">
+      <span>Hahnzustand</span>
+      <div class="track">
+        <span class="off">AUS</span>
+        <span class="on">EIN</span>
+        <span class="off">AUS</span>
+      </div>
+      <span class="time-direction text-small text-muted">Zeit →</span>
+    </div>
+    <p class="rule text-small text-muted">Die Bedingung muss für die ganze Wartezeit gelten. Zwischen den Schwellen bleibt der Zustand bei passendem Klang erhalten. So führen kurze Störungen und Pegelschwankungen seltener zu einem Wechsel.</p>
+  </section>
+
+  <hr>
+
+  <div class="parameter">
+    <span class="stage-name">Zum Einstellen</span>
+    <span class="text-small text-muted">Bandpegel bei geschlossenem Hahn und schwachem Strahl vergleichen. Beide Schwellen dazwischen setzen, EIN höher als AUS. Hoch- und Tiefpass zeichnen die EQ-Grundkurve neu (1,3 und 9,7&nbsp;kHz als Startwerte). Bei ausgeschaltetem Edit Mode lässt sich die EQ-Kurve per Ziehen anpassen.</span>
+  </div>
+</section>
+</body>
+</html>
